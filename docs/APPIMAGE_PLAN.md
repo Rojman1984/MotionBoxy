@@ -250,6 +250,46 @@ On first launch with empty storage, `Gui.qml:153` (`pReadyBrowse` binding) logs 
 evaluation and everything proceeds. Second launch on existing storage is clean. Cosmetic log
 noise only.
 
+## Tester fix: dependency closure (2026-09-08, post appimage-v1)
+
+A tester hit `cannot find libd2.so.1` on the released AppImage — that is
+`libdouble-conversion.so.3`, a `libQt6Core` dependency. Root cause: the closure's skip list
+treated the whole **build host baseline** as tester-guaranteed. It is not: glibc/desktop-stack
+libs are universal, but the Qt support libs and compression/codec support libs are not.
+
+### Fix in `appimage.sh`
+
+- **New `SKIP_RE`**: only glibc family, `libstdc++`/`libgcc_s`, the X11/xcb/GLVND/wayland/drm
+  graphics stack, glib family, dbus/systemd, pulse, fontconfig/freetype and
+  `libmount`/`libblkid`/`libselinux`/`libcap` stay out of the bundle. Everything else the
+  payload links is now **bundled** with `$ORIGIN` rpath. Two deliberate exclusions worth
+  recording:
+  - `libstdc++`/`libgcc_s`: the glibc ≥ 2.39 floor already guarantees a new-enough libstdc++;
+    bundling an *older* one would interpose against **newer** host C++ libs (e.g. a GCC-14
+    libproxy needing `GLIBCXX_3.4.34`) and break them.
+  - `libmount`/`libblkid`/`libselinux`/`libcap`: util-linux/systemd base (universal); bundling
+    would shadow the host's copies for host glib/gio (version skew → host stack crash).
+- **`SYS_DIRS` gained `/usr/lib/x86_64-linux-gnu/libproxy`**: Debian ships
+  `libpxbackend-1.0.so` in that subdir; bundled `libproxy.so.1` hard-links it (direct NEEDED,
+  not dlopen) and bundled `libQt6Network.so.6` hard-links `libproxy.so.1` — so the whole chain
+  (`pxbackend → curl-gnutls → nghttp2/rtmp/ssh/psl/ldap/sasl2 + duktape`) is closed into the
+  bundle. Without it, testers without glib-networking would abort at launch.
+
+### Audit (the regression check)
+
+Union of `DT_NEEDED` over every bundled ELF minus the bundle's basenames = "expected from
+system". After the fix this list is exactly the declared host stack:
+
+```
+libc/libm/libresolv/ld-linux, libstdc++/libgcc_s, libEGL/GL/GLX/OpenGL, libX11*/libxcb*/
+libxkbcommon*, libICE/libSM, libdrm, libglib/gobject/gio/gmodule, libdbus-1, libpulse,
+libfontconfig, libfreetype
+```
+
+Bundle grew 447 → 457 distinct libraries; AppImage 99.9 → 103.4 MB. Launch with a fresh
+`$HOME` verified (exit 124 = alive, storage auto-created, network connected, zero
+missing-library errors). Regression check: re-run the audit after any deploy/ payload change.
+
 ## Risks / notes
 
 - **glibc baseline**: artifact built on 24.04 won't run on older distros — stated in release

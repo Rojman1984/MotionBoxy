@@ -142,9 +142,21 @@ if [ -z "$PATCHELF" ]; then
     fi
 fi
 
-SYS_DIRS="/lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu /usr/lib /lib"
+# The trailing libproxy dir is where Debian ships libpxbackend-1.0.so (the bundled
+# libproxy.so.1 hard-links it; without this dir the closure reports it MISSING and the
+# tester's loader would abort the whole app).
+SYS_DIRS="/lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu /usr/lib /lib /usr/lib/x86_64-linux-gnu/libproxy"
 
-SKIP_RE='(linux-vdso|ld-linux-x86-64|libc\.so|libm\.so|libpthread|libdl\.so|librt\.so|libresolv|libanl|libutil\.so|libcrypt|libBrokenLocale|libnss_|libnsl|libstdc\+\+|libgcc_s|libX11|libXau|libXdmcp|libxcb|libxkbcommon|libEGL\.so|libGLX\.so|libGLdispatch|libOpenGL\.so|libGL\.so|libgbm|libwayland|libdrm|libXext|libXfixes|libXrender|libXi\.so|libXcursor|libXrandr|libXinerama|libXcomposite|libXdamage|libICE\.so|libSM\.so|libglib-2|libgobject-2|libgio-2|libgmodule-2|libdbus-1|libsystemd|libpulse|libasyncns|libapparmor|libsamplerate|libfontconfig|libfreetype|libharfbuzz|libgraphite2|libpng16|libmd4c|libb2\.so|libdouble-conversion|libpcre2|libbrotli|libz\.so|libzstd|liblzma|liblz4|libbz2|libexpat|libffi|libselinux|libmount|libblkid|libcap\.so|libkeyutils|libgssapi_krb5|libkrb5|libk5crypto|libcom_err|libproxy|libpxbackend|libduktape|libmd\.so|libbsd)'
+# Kept out of the bundle (host-guaranteed by the stated baseline: glibc >= 2.39 + desktop
+# stack, or interposition-dangerous): glibc family, libstdc++/libgcc_s (the glibc floor
+# guarantees a new-enough one; bundling could break NEWER host C++ libs via interposition),
+# the X11/xcb/GLVND/wayland/drm graphics stack, glib family, dbus/systemd, pulse,
+# fontconfig/freetype, libmount/libblkid/libselinux/libcap (util-linux/systemd base;
+# bundling would shadow the host's copies for host glib/gio).
+# Everything else the payload links (Qt support libs, compression, harfbuzz, krb5,
+# libproxy, ...) IS bundled — a tester distro is not guaranteed to have it
+# (tester report appimage-v1: "cannot find libd2.so.1" = libdouble-conversion.so.3).
+SKIP_RE='(linux-vdso|ld-linux-x86-64|libc\.so|libm\.so|libpthread|libdl\.so|librt\.so|libresolv|libanl|libutil\.so|libcrypt|libBrokenLocale|libnss_|libnsl|libstdc\+\+|libgcc_s|libX11|libXau|libXdmcp|libxcb|libxkbcommon|libEGL\.so|libGLX\.so|libGLdispatch|libOpenGL\.so|libGL\.so|libgbm|libwayland|libdrm|libXext|libXfixes|libXrender|libXi\.so|libXcursor|libXrandr|libXinerama|libXcomposite|libXdamage|libICE\.so|libSM\.so|libglib-2|libgobject-2|libgio-2|libgmodule-2|libdbus-1|libsystemd|libpulse|libfontconfig|libfreetype|libselinux|libmount|libblkid|libcap\.so)'
 
 closure()
 {

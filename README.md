@@ -62,8 +62,9 @@ A self-contained Linux (x86_64) AppImage is available from this repository's
 Systems without FUSE: append `--appimage-extract-and-run`.
 
 Requires glibc >= 2.39 (built on Ubuntu 24.04) and the host desktop stack (X11/GLVND, glib,
-pulseaudio, fontconfig). Bundles: Qt 6.4.2 runtime, VLC 3.0.20 with the complete plugin set
-(pulse audio output, TS demuxer, Opus decoder), libtorrent-rasterbar and OpenSSL.
+pulseaudio, fontconfig). Bundles everything else: Qt 6.4.2 runtime, VLC 3.0.20 with the
+complete plugin set (pulse audio output, TS demuxer, Opus decoder), libtorrent-rasterbar,
+OpenSSL and all non-core support libraries (compression, codecs, libproxy, Qt support libs).
 
 Verify the download:
 
