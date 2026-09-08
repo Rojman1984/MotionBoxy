@@ -60,9 +60,26 @@ A self-contained Linux (x86_64) AppImage is available from this repository's
     ./MotionBoxy-1.0.0-x86_64.AppImage
 
 Systems without FUSE: append `--appimage-extract-and-run`.
+
 Requires glibc >= 2.39 (built on Ubuntu 24.04) and the host desktop stack (X11/GLVND, glib,
 pulseaudio, fontconfig). Bundles: Qt 6.4.2 runtime, VLC 3.0.20 with the complete plugin set
 (pulse audio output, TS demuxer, Opus decoder), libtorrent-rasterbar and OpenSSL.
+
+Verify the download:
+
+    sha256sum -c SHA256SUMS
+
+Notes for testers:
+
+- Storage is created fresh in `$HOME/.local/share/MotionBox` on first launch; nothing else is
+  written outside that directory (and its cache dir).
+- VLC rescans its plugin cache each launch while the scan root is read-only (~1s, harmless
+  stderr messages).
+- Passing a local media file on the command line is treated as a browse/search query; stream
+  and web URLs play as expected.
+
+Found an issue? Report it in this repository's
+[issue tracker](https://github.com/Rojman1984/MotionBoxy/issues).
 
 ## Requirements
 
@@ -115,6 +132,24 @@ Build the application:
 Deploy the application and its dependencies:
 
     sh deploy.sh <win32 | win64 | macOS | linux | android> [clean]
+
+### Packaging (Linux AppImage)
+
+After the linux build and deploy, produce the distributable AppImage with:
+
+    bash appimage.sh
+
+This assembles the AppDir from `deploy/`, syncs file mtimes to `SOURCE_DATE_EPOCH`, regenerates
+the VLC plugin cache (`plugins.dat`), runs the validation gate (pulse/TS/Opus plugins present,
+backend payload, qrc-embedded shaders, plugin count) and calls `appimagetool`. The result is
+`MotionBoxy-<version>-x86_64.AppImage` in the repository root.
+
+Environment knobs: `MOTIONBOXY_VERSION` (default 1.0.0), `APPIMAGETOOL` (discovered from PATH
+or `../tools/`), `VLC_CACHE_GEN`, `PATCHELF`, `SK_PREBUILT=1` (reuse an existing `Sky/deploy`),
+`SK_CANONICAL=1` (assemble via `Sky/deploy.sh` + 3rdparty instead of the distro-Qt bridge).
+
+The full pipeline, corrections and troubleshooting notes live in
+[docs/APPIMAGE_PLAN.md](docs/APPIMAGE_PLAN.md).
 
 ## License
 
