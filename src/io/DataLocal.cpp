@@ -124,6 +124,8 @@ public: // Variables
     bool proxyStream;
     bool proxyActive;
 
+    QStringList backendDisabled;
+
 #ifndef SK_NO_TORRENT
     int torrentPort;
 
@@ -236,6 +238,11 @@ public: // Variables
 
     stream.writeTextElement("torrentCache", QString::number(torrentCache));
 #endif
+
+    // NOTE: This element is written last and read tolerantly (see extract), so older and newer
+    //       versions of data.xml remain compatible.
+
+    stream.writeTextElement("backendDisabled", backendDisabled.join('\n'));
 
     stream.writeEndElement(); // name
 
@@ -435,6 +442,8 @@ public: // Variables
 
     action->proxyStream = _proxyStream;
     action->proxyActive = _proxyActive;
+
+    action->backendDisabled = _backendDisabled;
 
 #ifndef SK_NO_TORRENT
     action->torrentPort = _torrentPort;
@@ -765,6 +774,21 @@ bool DataLocal::extract(const QByteArray & array)
 
     _torrentCache = WControllerXml::readNextInt(&stream);
 #endif
+
+    //---------------------------------------------------------------------------------------------
+    // backendDisabled
+    // NOTE: This element is optional: it is written last and read without a failure condition, so
+    //       a data.xml saved by an older version still loads.
+
+    if (WControllerXml::readNextStartElement(&stream, "backendDisabled"))
+    {
+        QStringList list = WControllerXml::readNextString(&stream).split('\n');
+
+        for (int i = 0; i < list.count(); i++)
+        {
+            if (list.at(i).isEmpty() == false) _backendDisabled.append(list.at(i));
+        }
+    }
 
     qDebug("DATA LOCAL LOADED");
 
@@ -1273,6 +1297,24 @@ void DataLocal::setProxyActive(bool active)
     _proxyActive = active;
 
     emit proxyActiveChanged();
+
+    save();
+}
+
+//-------------------------------------------------------------------------------------------------
+
+QStringList DataLocal::backendDisabled() const
+{
+    return _backendDisabled;
+}
+
+void DataLocal::setBackendDisabled(const QStringList & disabled)
+{
+    if (_backendDisabled == disabled) return;
+
+    _backendDisabled = disabled;
+
+    emit backendDisabledChanged();
 
     save();
 }

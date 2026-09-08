@@ -126,6 +126,10 @@ public: // Interface
     Q_INVOKABLE void updateBackends() const;
     Q_INVOKABLE void resetBackends () const;
 
+    Q_INVOKABLE bool backendEnabled(int id);
+
+    Q_INVOKABLE void setBackendEnabled(int id, bool enabled);
+
     Q_INVOKABLE void connectToHost(const QString & url);
 
     Q_INVOKABLE QString openFile    (const QString & title);
@@ -217,6 +221,11 @@ private: // Functions
 
     QString getFile(const QString & title, const QString & filter);
 
+    QString backendLabel(int id) const;
+
+    bool backendIsLocked(const QString & label) const;
+    bool backendIsEnabled(const QString & label) const;
+
 private slots:
     void onLoaded     ();
     void onIndexLoaded();
@@ -245,6 +254,8 @@ signals:
 
     void linkReady(const QString & text);
 
+    void notice(const QString & text);
+
     void vbmlSaved(bool ok, const QString & path);
     void tagSaved (bool ok, const QString & path);
 
@@ -255,6 +266,8 @@ signals:
     void libraryChanged ();
     void feedsChanged   ();
     void backendsChanged();
+
+    void backendEnabledChanged();
     void relatedChanged ();
 
     void indexChanged();

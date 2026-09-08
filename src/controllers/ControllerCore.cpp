@@ -668,6 +668,13 @@ ControllerCore::ControllerCore() : WController()
     }
     else _query = WControllerPlaylist::queryFromText(text, id).trimmed();
 
+    if (backendIsEnabled(id) == false)
+    {
+        emit notice(tr("Backend disabled"));
+
+        return;
+    }
+
     playlist->addDeleteLock();
 
     _playlistTrack = playlist;
@@ -761,6 +768,33 @@ ControllerCore::ControllerCore() : WController()
     WControllerFileReply * reply = copyBackends(_path + "/backend");
 
     connect(reply, SIGNAL(complete(bool)), this, SLOT(onReload()));
+}
+
+/* Q_INVOKABLE */ bool ControllerCore::backendEnabled(int id)
+{
+    return backendIsEnabled(backendLabel(id));
+}
+
+/* Q_INVOKABLE */ void ControllerCore::setBackendEnabled(int id, bool enabled)
+{
+    QString label = backendLabel(id);
+
+    // NOTE: The built-in 'browser' and 'duckduckgo' backends cannot be disabled.
+    if (backendIsLocked(label)) return;
+
+    if (backendIsEnabled(label) == enabled) return;
+
+    QStringList list = _local._backendDisabled;
+
+    if (enabled)
+    {
+        list.removeAll(label);
+    }
+    else list.append(label);
+
+    _local.setBackendDisabled(list);
+
+    emit backendEnabledChanged();
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -1366,6 +1400,33 @@ QString ControllerCore::getFile(const QString & title, const QString & filter)
 
     return QString();
 #endif
+}
+
+//-------------------------------------------------------------------------------------------------
+
+QString ControllerCore::backendLabel(int id) const
+{
+    int index = _backends->indexFromId(id);
+
+    if (index == -1) return QString();
+
+    return _backends->itemLabel(index);
+}
+
+bool ControllerCore::backendIsLocked(const QString & label) const
+{
+    // NOTE: 'browser' is the built-in item and 'duckduckgo' is the search engine used by the
+    //       browse mode (PanelBrowse pSearchEngine) and by searchMore. Both are always enabled.
+    if (label.isEmpty() || label == "browser" || label == "duckduckgo") return true;
+
+    return false;
+}
+
+bool ControllerCore::backendIsEnabled(const QString & label) const
+{
+    if (backendIsLocked(label)) return true;
+
+    return (_local._backendDisabled.contains(label) == false);
 }
 
 //-------------------------------------------------------------------------------------------------

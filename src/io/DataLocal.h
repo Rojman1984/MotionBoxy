@@ -23,6 +23,9 @@
 #ifndef DATALOCAL_H
 #define DATALOCAL_H
 
+// Qt includes
+#include <QStringList>
+
 // Sk includes
 #include <WLocalObject>
 #include <WAbstractBackend>
@@ -101,6 +104,9 @@ class DataLocal : public WLocalObject
 
     Q_PROPERTY(bool proxyStream READ proxyStream WRITE setProxyStream NOTIFY proxyStreamChanged)
     Q_PROPERTY(bool proxyActive READ proxyActive WRITE setProxyActive NOTIFY proxyActiveChanged)
+
+    Q_PROPERTY(QStringList backendDisabled READ backendDisabled WRITE setBackendDisabled
+               NOTIFY backendDisabledChanged)
 
 #ifndef SK_NO_TORRENT
     Q_PROPERTY(int torrentPort READ torrentPort WRITE setTorrentPort NOTIFY torrentPortChanged)
@@ -188,6 +194,8 @@ signals:
 
     void proxyStreamChanged();
     void proxyActiveChanged();
+
+    void backendDisabledChanged();
 
 #ifndef SK_NO_TORRENT
     void torrentPortChanged();
@@ -295,6 +303,9 @@ public: // Properties
     bool proxyActive() const;
     void setProxyActive(bool active);
 
+    QStringList backendDisabled() const;
+    void        setBackendDisabled(const QStringList & disabled);
+
 #ifndef SK_NO_TORRENT
     int  torrentPort() const;
     void setTorrentPort(int port);
@@ -374,6 +385,8 @@ private: // Variables
 
     bool _proxyStream;
     bool _proxyActive;
+
+    QStringList _backendDisabled;
 
 #ifndef SK_NO_TORRENT
     int _torrentPort;

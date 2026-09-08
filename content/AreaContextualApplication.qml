@@ -268,6 +268,29 @@ AreaContextual
 
             var type = core.itemType(folder, index);
 
+            if (folder == backends)
+            {
+                array.push({ "type": ContextualPage.Category, "title": qsTr("Backend") });
+
+                if (index != 0) // NOTE: Skip the built-in Browser item.
+                {
+                    var id = folder.idAt(index);
+
+                    if (core.backendEnabled(id))
+                    {
+                         array.push({ "id": 11, "title": qsTr("Disable") });
+                    }
+                    else array.push({ "id": 11, "title": qsTr("Enable") });
+                }
+
+                page.values = array;
+
+                // NOTE: id(s) are routed through onFolderClicked when currentId is 0.
+                currentId = 0;
+
+                return;
+            }
+
             if (folder.isFolderBase)
             {
                 if (type == LibraryItem.Playlist || type == LibraryItem.PlaylistFeed)
@@ -807,6 +830,11 @@ AreaContextual
 
                     history = null;
                 }
+            }
+            else if (id == 11) // Enable / Disable backend
+            {
+                core.setBackendEnabled(pItem.folder.idAt(pIndex),
+                                       core.backendEnabled(pItem.folder.idAt(pIndex)) == false);
             }
 
             return true;

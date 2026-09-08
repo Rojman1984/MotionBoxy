@@ -443,6 +443,11 @@ Item
                 local.cache = true;
             }
         }
+
+        /* QML_CONNECTION */ function onNotice(text)
+        {
+            popup.showText(text);
+        }
     }
 
     Connections

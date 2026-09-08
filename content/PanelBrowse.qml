@@ -56,6 +56,9 @@ SkyMouseArea
 
     property int pIndexBrowse: -2
 
+    // NOTE: The last enabled backend id, used to revert a disabled backend selection.
+    property int pBackendIdLast: 1
+
     //---------------------------------------------------------------------------------------------
 
     property string pQuery
@@ -202,6 +205,20 @@ SkyMouseArea
         {
             if (pIndexBrowse == -2)
             {
+                // NOTE: A disabled backend cannot be selected: we revert and notify.
+                if (pFolderBackends.currentId != 1
+                    &&
+                    core.backendEnabled(pFolderBackends.currentId) == false)
+                {
+                    popup.showText(qsTr("Backend disabled. Enable it to use."));
+
+                    pFolderBackends.currentId = pBackendIdLast;
+
+                    return;
+                }
+
+                pBackendIdLast = pFolderBackends.currentId;
+
                 pBrowse();
 
                 pApplyBrowseIndex();
@@ -211,6 +228,22 @@ SkyMouseArea
                 pApplyButton(pIndexBrowse);
 
                 pIndexBrowse = -2;
+            }
+        }
+    }
+
+    Connections
+    {
+        target: core
+
+        /* QML_CONNECTION */ function onBackendEnabledChanged()
+        {
+            if (pFolderBackends && pFolderBackends.currentId != 1
+                &&
+                core.backendEnabled(pFolderBackends.currentId) == false)
+            {
+                // NOTE: The selected backend was disabled: we go back to the Browser.
+                pFolderBackends.currentId = 1;
             }
         }
     }
@@ -444,6 +477,13 @@ SkyMouseArea
             return;
         }
 
+        if (id != 1 && core.backendEnabled(id) == false)
+        {
+            popup.showText(qsTr("Backend disabled. Enable it to use."));
+
+            return;
+        }
+
         expose();
 
         pSetBackendId(id);
@@ -579,10 +619,25 @@ SkyMouseArea
         gui.restore();
     }
 
+    function pCheckBackend()
+    {
+        if (pBrowsing) return true; // NOTE: The Browser backend is always enabled.
+
+        if (core.backendEnabled(pFolderBackends.currentId)) return true;
+
+        pSearchEnd();
+
+        popup.showText(qsTr("Backend disabled. Enable it to use."));
+
+        return false;
+    }
+
     //---------------------------------------------------------------------------------------------
 
     function pStartSearch(query)
     {
+        if (pCheckBackend() == false) return;
+
         pHideCompletion();
 
         local.query = panelBrowse.query;
@@ -838,6 +893,8 @@ SkyMouseArea
     {
         if (query == "") return;
 
+        if (pCheckBackend() == false) return;
+
         var source = controllerPlaylist.createSource(pFolderBrowse.label,
                                                      "search", pItemBrowse.label, query);
 
@@ -857,6 +914,8 @@ SkyMouseArea
     function pBrowseBackendItem()
     {
         if (pBrowsing || pItemBrowse == null || query == "") return;
+
+        if (pCheckBackend() == false) return;
 
         var source = controllerPlaylist.createSource(pFolderBrowse.label,
                                                      "search", pItemBrowse.label, query);
@@ -1605,6 +1664,8 @@ SkyMouseArea
             iconDefaultSize: (index == 0) ? st.size20x20
                                           : st.size16x16
 
+            isDisabled: (local.backendDisabled.indexOf(backends.itemLabel(index)) != -1)
+
             function pPressed(mouse)
             {
                 if (mouse.button & Qt.LeftButton)
@@ -1625,7 +1686,7 @@ SkyMouseArea
         listFolder: scrollBrowse.list
 
         enablePlay      : false
-        enableContextual: false
+        enableContextual: true
         enableAdd       : false
         enableDrag      : false
 

@@ -378,6 +378,8 @@ Panel
             iconDefaultSize: (id == 1) ? st.size20x20
                                        : st.size16x16
 
+            isDisabled: (local.backendDisabled.indexOf(backends.itemLabel(index)) != -1)
+
             text: title
 
             onPressed: backend = id
