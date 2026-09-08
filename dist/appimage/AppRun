@@ -1,0 +1,19 @@
+#!/bin/sh
+#--------------------------------------------------------------------------------------------------
+# AppRun — MotionBoxy AppImage bootstrap
+#
+# NOTE: Sky registers the QML import path as QDir::currentPath(), so the process working
+#       directory MUST be usr/bin (where the bundled QML modules + start.sh live) before
+#       the application starts.
+#--------------------------------------------------------------------------------------------------
+
+if [ -z "$APPDIR" ]; then
+
+    APPDIR=$(dirname "$(readlink -f "$0")")
+
+    export APPDIR
+fi
+
+cd "$APPDIR/usr/bin" || exit 1
+
+exec ./start.sh

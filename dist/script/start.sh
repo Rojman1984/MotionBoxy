@@ -11,4 +11,4 @@ export QT_PLUGIN_PATH="$PWD"
 
 #export QT_DEBUG_PLUGINS=1
 
-"$PWD/MotionBox"
+"$PWD/MotionBox" "$@"

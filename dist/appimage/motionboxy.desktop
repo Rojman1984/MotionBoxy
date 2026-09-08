@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=MotionBoxy
+GenericName=Video player
+Comment=Free and open source video player
+Exec=MotionBox
+Icon=motionboxy
+Terminal=false
+StartupWMClass=MotionBox
+Categories=AudioVideo;Video;Player;

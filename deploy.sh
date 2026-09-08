@@ -168,11 +168,17 @@ fi
 echo "DEPLOYING Sky"
 echo "-------------"
 
-cd "$Sky"
+# NOTE: SK_PREBUILT=1 skips re-running Sky/deploy.sh (Sky/deploy assembled by an
+#       equivalent pipeline instead: see docs/APPIMAGE_PLAN.md).
 
-sh deploy.sh $1 tools
+if [ -z "$SK_PREBUILT" ]; then
 
-cd -
+    cd "$Sky"
+
+    sh deploy.sh $1 tools
+
+    cd -
+fi
 
 path="$Sky/deploy"
 
@@ -453,7 +459,11 @@ elif [ $1 = "linux" ]; then
             cp "$path/lib$QtX"XmlPatterns.so.$qx $deploy
         else
             cp "$path/lib$QtX"Core5Compat.so.$qx $deploy
-            cp "$path/lib$QtX"QmlMeta.so.$qx     $deploy
+
+            if [ -f "$path/lib$QtX"QmlMeta.so.$qx ]; then
+
+                cp "$path/lib$QtX"QmlMeta.so.$qx $deploy
+            fi
         fi
 
         if [ -f "$path/lib$QtX"QmlModels.so.$qx ]; then

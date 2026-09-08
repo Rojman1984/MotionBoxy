@@ -51,6 +51,19 @@ The video player is based on [VLC](https://github.com/videolan/vlc) and [libtorr
 - Linux 32 bit and 64 bit.
 - Android 32 bit and 64 bit (experimental).
 
+## Linux download (AppImage)
+
+A self-contained Linux (x86_64) AppImage is available from this repository's
+[releases](https://github.com/Rojman1984/MotionBoxy/releases) — no build required:
+
+    chmod +x MotionBoxy-1.0.0-x86_64.AppImage
+    ./MotionBoxy-1.0.0-x86_64.AppImage
+
+Systems without FUSE: append `--appimage-extract-and-run`.
+Requires glibc >= 2.39 (built on Ubuntu 24.04) and the host desktop stack (X11/GLVND, glib,
+pulseaudio, fontconfig). Bundles: Qt 6.4.2 runtime, VLC 3.0.20 with the complete plugin set
+(pulse audio output, TS demuxer, Opus decoder), libtorrent-rasterbar and OpenSSL.
+
 ## Requirements
 
 - [Sky](https://omega.gg/Sky/sources) latest version.

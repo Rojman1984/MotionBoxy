@@ -1,0 +1,11 @@
+# Build outputs
+build/
+build-*/
+bin/
+deploy/
+dist/qrc/
+run/
+
+# Release artifacts
+*.AppImage
+SHA256SUMS
