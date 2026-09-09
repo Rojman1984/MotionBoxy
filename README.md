@@ -79,6 +79,25 @@ Notes for testers:
 - Passing a local media file on the command line is treated as a browse/search query; stream
   and web URLs play as expected.
 
+### Reading playback failures
+
+When an item fails to play, the application log (`$HOME/.local/share/MotionBox/log.txt`) states
+the reason. The common signatures:
+
+- `Redirected https://www.google.com/sorry/...` followed by failures — the network you are on is
+  being blocked by the provider (anti-bot filtering at the ISP/proxy level). The application is
+  working; try a different network.
+- Twitch item fails after an `usher.ttvnw.net` request logged as `code 203` — that is an HTTP 404
+  from Twitch, meaning the channel is offline (or the VOD is removed/sub-only). Live channels and
+  public VODs play normally; check the same item on twitch.tv first.
+- `EMPTY MEDIAS` right after a successful page fetch — the site served no stream data for that
+  request (intermittent server-side gating). Retrying the same item later usually works.
+- TikTok item fails with `code 299` — the backend script's client fingerprint is rejected by the
+  TikTok API (HTTP 429); tracked upstream in `omega-gg/backend`.
+
+Backend scripts are refreshed live from `omega-gg/backend` at startup, so script fixes reach
+every installation without rebuilding the application.
+
 Found an issue? Report it in this repository's
 [issue tracker](https://github.com/Rojman1984/MotionBoxy/issues).
 
